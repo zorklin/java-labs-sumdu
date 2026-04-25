@@ -22,12 +22,12 @@ public class Main {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static void main(String[] args) {
-        ArrayList<Phone> inventory = loadFromFile();
+        Store store = loadFromFile();
         Scanner scanner = new Scanner(System.in);
         boolean running = true;
 
         System.out.println("=== Phone Manager ===");
-        System.out.println("Loaded " + inventory.size() + " device(s) from " + FILE_PATH);
+        System.out.println("Loaded " + store.getItems().size() + " entry/entries from " + FILE_PATH);
 
         while (running) {
             printMainMenu();
@@ -42,12 +42,12 @@ public class Main {
             }
 
             switch (choice) {
-                case 1 -> handleCreateMenu(inventory, scanner);
-                case 2 -> listDevices(inventory);
-                case 3 -> handleSearchMenu(inventory, scanner);
+                case 1 -> handleCreateMenu(store, scanner);
+                case 2 -> store.printAll();
+                case 3 -> handleSearchMenu(store, scanner);
                 case 4 -> {
                     running = false;
-                    saveToFile(inventory);
+                    saveToFile(store);
                     System.out.println("Data saved to " + FILE_PATH + ". Goodbye!");
                 }
                 default -> System.out.println("[Error] Unknown option. Choose 1-4.");
@@ -57,44 +57,52 @@ public class Main {
         scanner.close();
     }
 
-    static ArrayList<Phone> loadFromFile() {
-        ArrayList<Phone> result = new ArrayList<>();
+    static Store loadFromFile() {
+        Store store = new Store();
         if (!Files.exists(Paths.get(FILE_PATH))) {
-            return result;
+            return store;
         }
         try (FileReader reader = new FileReader(FILE_PATH)) {
             JsonArray array = JsonParser.parseReader(reader).getAsJsonArray();
             for (int i = 0; i < array.size(); i++) {
-                JsonObject obj = array.get(i).getAsJsonObject();
-                JsonElement typeElement = obj.get("type");
+                JsonObject entryObj = array.get(i).getAsJsonObject();
+                JsonObject phoneObj = entryObj.getAsJsonObject("phone");
+                if (phoneObj == null) {
+                    continue;
+                }
+                JsonElement typeElement = phoneObj.get("type");
                 if (typeElement == null) {
                     continue;
                 }
                 String type = typeElement.getAsString();
                 Phone phone = null;
                 switch (type) {
-                    case "SmartPhone" -> phone = GSON.fromJson(obj, SmartPhone.class);
-                    case "KeypadPhone" -> phone = GSON.fromJson(obj, KeypadPhone.class);
-                    case "SatellitePhone" -> phone = GSON.fromJson(obj, SatellitePhone.class);
-                    case "LandlinePhone" -> phone = GSON.fromJson(obj, LandlinePhone.class);
-                    default -> phone = GSON.fromJson(obj, Phone.class);
+                    case "SmartPhone" -> phone = GSON.fromJson(phoneObj, SmartPhone.class);
+                    case "KeypadPhone" -> phone = GSON.fromJson(phoneObj, KeypadPhone.class);
+                    case "SatellitePhone" -> phone = GSON.fromJson(phoneObj, SatellitePhone.class);
+                    case "LandlinePhone" -> phone = GSON.fromJson(phoneObj, LandlinePhone.class);
+                    default -> phone = GSON.fromJson(phoneObj, Phone.class);
                 }
                 if (phone != null) {
-                    result.add(phone);
+                    int quantity = entryObj.has("quantity") ? entryObj.get("quantity").getAsInt() : 1;
+                    store.addNewPhone(phone, quantity);
                 }
             }
         } catch (IOException e) {
             System.out.println("[Warning] Could not read " + FILE_PATH + ": " + e.getMessage());
         }
-        return result;
+        return store;
     }
 
-    static void saveToFile(ArrayList<Phone> inventory) {
+    static void saveToFile(Store store) {
         JsonArray array = new JsonArray();
-        for (int i = 0; i < inventory.size(); i++) {
-            Phone phone = inventory.get(i);
-            JsonElement element = GSON.toJsonTree(phone);
-            array.add(element);
+        ArrayList<StoreEntry> items = store.getItems();
+        for (int i = 0; i < items.size(); i++) {
+            StoreEntry entry = items.get(i);
+            JsonObject entryObj = new JsonObject();
+            entryObj.add("phone", GSON.toJsonTree(entry.getPhone()));
+            entryObj.addProperty("quantity", entry.getQuantity());
+            array.add(entryObj);
         }
         try (FileWriter writer = new FileWriter(FILE_PATH)) {
             GSON.toJson(array, writer);
@@ -105,14 +113,63 @@ public class Main {
 
     private static void printMainMenu() {
         System.out.println("\n--- MAIN MENU ---");
-        System.out.println("1. Create new device");
+        System.out.println("1. Add device to store");
         System.out.println("2. List all devices");
         System.out.println("3. Search devices");
         System.out.println("4. Exit");
         System.out.print("Your choice: ");
     }
 
-    private static void handleSearchMenu(ArrayList<Phone> inventory, Scanner scanner) {
+    private static void handleCreateMenu(Store store, Scanner scanner) {
+        System.out.println("\n--- SELECT TYPE ---");
+        System.out.println("1. SmartPhone");
+        System.out.println("2. KeypadPhone");
+        System.out.println("3. SatellitePhone");
+        System.out.println("4. LandlinePhone");
+        System.out.println("0. Back");
+        System.out.print("Your choice: ");
+
+        int typeChoice = -1;
+        try {
+            typeChoice = scanner.nextInt();
+        } catch (InputMismatchException e) {
+            System.out.println("[Error] Please enter a number.");
+        } finally {
+            scanner.nextLine();
+        }
+
+        Phone phone = null;
+        switch (typeChoice) {
+            case 1 -> phone = buildSmartPhone(scanner);
+            case 2 -> phone = buildKeypadPhone(scanner);
+            case 3 -> phone = buildSatellitePhone(scanner);
+            case 4 -> phone = buildLandlinePhone(scanner);
+            case 0 -> {
+                System.out.println("Returning to main menu...");
+                return;
+            }
+            default -> {
+                System.out.println("[Error] Unknown type.");
+                return;
+            }
+        }
+
+        if (phone == null) {
+            return;
+        }
+
+        int quantity = 1;
+        try {
+            quantity = readInt(scanner, "  Quantity         : ");
+        } catch (NumberFormatException e) {
+            System.out.println("[Warning] Invalid quantity, defaulting to 1.");
+        }
+
+        store.addNewPhone(phone, quantity);
+        System.out.println("[OK] Added: " + phone + " x" + quantity);
+    }
+
+    private static void handleSearchMenu(Store store, Scanner scanner) {
         boolean inSearch = true;
         while (inSearch) {
             System.out.println("\n--- SEARCH ---");
@@ -135,7 +192,7 @@ public class Main {
                 case 1 -> {
                     System.out.print("  Brand (partial match) : ");
                     String brand = scanner.nextLine().trim();
-                    printSearchResults(findByBrand(inventory, brand));
+                    printSearchResults(store.findByBrand(brand));
                 }
                 case 2 -> {
                     try {
@@ -143,7 +200,7 @@ public class Main {
                         double min = Double.parseDouble(scanner.nextLine().trim());
                         System.out.print("  Max price (UAH) : ");
                         double max = Double.parseDouble(scanner.nextLine().trim());
-                        printSearchResults(findByPriceRange(inventory, min, max));
+                        printSearchResults(store.findByPriceRange(min, max));
                     } catch (NumberFormatException e) {
                         System.out.println("[Error] Invalid numeric value.");
                     }
@@ -152,7 +209,7 @@ public class Main {
                     try {
                         System.out.print("  Min storage (GB) : ");
                         int minStorage = Integer.parseInt(scanner.nextLine().trim());
-                        printSearchResults(findByStorage(inventory, minStorage));
+                        printSearchResults(store.findByStorage(minStorage));
                     } catch (NumberFormatException e) {
                         System.out.println("[Error] Invalid numeric value.");
                     }
@@ -163,38 +220,6 @@ public class Main {
         }
     }
 
-    static ArrayList<Phone> findByBrand(ArrayList<Phone> inventory, String brand) {
-        ArrayList<Phone> result = new ArrayList<>();
-        String lowerBrand = brand.toLowerCase();
-        for (int i = 0; i < inventory.size(); i++) {
-            if (inventory.get(i).getBrand().toLowerCase().contains(lowerBrand)) {
-                result.add(inventory.get(i));
-            }
-        }
-        return result;
-    }
-
-    static ArrayList<Phone> findByPriceRange(ArrayList<Phone> inventory, double min, double max) {
-        ArrayList<Phone> result = new ArrayList<>();
-        for (int i = 0; i < inventory.size(); i++) {
-            double price = inventory.get(i).getPrice();
-            if (price >= min && price <= max) {
-                result.add(inventory.get(i));
-            }
-        }
-        return result;
-    }
-
-    static ArrayList<Phone> findByStorage(ArrayList<Phone> inventory, int minStorage) {
-        ArrayList<Phone> result = new ArrayList<>();
-        for (int i = 0; i < inventory.size(); i++) {
-            if (inventory.get(i).getStorageCapacity() >= minStorage) {
-                result.add(inventory.get(i));
-            }
-        }
-        return result;
-    }
-
     private static void printSearchResults(ArrayList<Phone> results) {
         if (results.isEmpty()) {
             System.out.println("  Збігів не знайдено.");
@@ -203,34 +228,6 @@ public class Main {
         System.out.println("\n--- Search Results (" + results.size() + " found) ---");
         for (int i = 0; i < results.size(); i++) {
             System.out.println((i + 1) + ". " + results.get(i).toString());
-        }
-    }
-
-    private static void handleCreateMenu(ArrayList<Phone> inventory, Scanner scanner) {
-        System.out.println("\n--- SELECT TYPE ---");
-        System.out.println("1. SmartPhone");
-        System.out.println("2. KeypadPhone");
-        System.out.println("3. SatellitePhone");
-        System.out.println("4. LandlinePhone");
-        System.out.println("0. Back");
-        System.out.print("Your choice: ");
-
-        int typeChoice = -1;
-        try {
-            typeChoice = scanner.nextInt();
-        } catch (InputMismatchException e) {
-            System.out.println("[Error] Please enter a number.");
-        } finally {
-            scanner.nextLine();
-        }
-
-        switch (typeChoice) {
-            case 1 -> addSmartPhone(inventory, scanner);
-            case 2 -> addKeypadPhone(inventory, scanner);
-            case 3 -> addSatellitePhone(inventory, scanner);
-            case 4 -> addLandlinePhone(inventory, scanner);
-            case 0 -> System.out.println("Returning to main menu...");
-            default -> System.out.println("[Error] Unknown type. Returning to main menu.");
         }
     }
 
@@ -249,26 +246,23 @@ public class Main {
         return Integer.parseInt(scanner.nextLine().trim());
     }
 
-    private static void addSmartPhone(ArrayList<Phone> inventory, Scanner scanner) {
+    private static SmartPhone buildSmartPhone(Scanner scanner) {
         try {
             String brand = readString(scanner, "  Brand            : ");
             String model = readString(scanner, "  Model            : ");
             double price = readDouble(scanner, "  Price (UAH)      : ");
             int storage = readInt(scanner, "  Storage (GB)     : ");
             String os = readString(scanner, "  Operating System : ");
-
-            SmartPhone phone = new SmartPhone(brand, model, price, storage, os);
-            inventory.add(phone);
-            System.out.println("[OK] Added: " + phone);
-
+            return new SmartPhone(brand, model, price, storage, os);
         } catch (NumberFormatException e) {
             System.out.println("[Error] Invalid numeric value.");
         } catch (IllegalArgumentException e) {
             System.out.println("[Error] " + e.getMessage());
         }
+        return null;
     }
 
-    private static void addKeypadPhone(ArrayList<Phone> inventory, Scanner scanner) {
+    private static KeypadPhone buildKeypadPhone(Scanner scanner) {
         try {
             String brand = readString(scanner, "  Brand          : ");
             String model = readString(scanner, "  Model          : ");
@@ -276,38 +270,32 @@ public class Main {
             int storage = readInt(scanner, "  Storage (GB)   : ");
             System.out.print("  Has flashlight? (true/false) : ");
             boolean flashlight = Boolean.parseBoolean(scanner.nextLine().trim());
-
-            KeypadPhone phone = new KeypadPhone(brand, model, price, storage, flashlight);
-            inventory.add(phone);
-            System.out.println("[OK] Added: " + phone);
-
+            return new KeypadPhone(brand, model, price, storage, flashlight);
         } catch (NumberFormatException e) {
             System.out.println("[Error] Invalid numeric value.");
         } catch (IllegalArgumentException e) {
             System.out.println("[Error] " + e.getMessage());
         }
+        return null;
     }
 
-    private static void addSatellitePhone(ArrayList<Phone> inventory, Scanner scanner) {
+    private static SatellitePhone buildSatellitePhone(Scanner scanner) {
         try {
             String brand = readString(scanner, "  Brand              : ");
             String model = readString(scanner, "  Model              : ");
             double price = readDouble(scanner, "  Price (UAH)        : ");
             int storage = readInt(scanner, "  Storage (GB)       : ");
             String network = readString(scanner, "  Satellite Network  : ");
-
-            SatellitePhone phone = new SatellitePhone(brand, model, price, storage, network);
-            inventory.add(phone);
-            System.out.println("[OK] Added: " + phone);
-
+            return new SatellitePhone(brand, model, price, storage, network);
         } catch (NumberFormatException e) {
             System.out.println("[Error] Invalid numeric value.");
         } catch (IllegalArgumentException e) {
             System.out.println("[Error] " + e.getMessage());
         }
+        return null;
     }
 
-    private static void addLandlinePhone(ArrayList<Phone> inventory, Scanner scanner) {
+    private static LandlinePhone buildLandlinePhone(Scanner scanner) {
         try {
             String brand = readString(scanner, "  Brand          : ");
             String model = readString(scanner, "  Model          : ");
@@ -315,26 +303,12 @@ public class Main {
             int storage = readInt(scanner, "  Storage (GB)   : ");
             System.out.print("  Is cordless? (true/false) : ");
             boolean cordless = Boolean.parseBoolean(scanner.nextLine().trim());
-
-            LandlinePhone phone = new LandlinePhone(brand, model, price, storage, cordless);
-            inventory.add(phone);
-            System.out.println("[OK] Added: " + phone);
-
+            return new LandlinePhone(brand, model, price, storage, cordless);
         } catch (NumberFormatException e) {
             System.out.println("[Error] Invalid numeric value.");
         } catch (IllegalArgumentException e) {
             System.out.println("[Error] " + e.getMessage());
         }
-    }
-
-    private static void listDevices(ArrayList<Phone> inventory) {
-        if (inventory.isEmpty()) {
-            System.out.println("  No devices in the inventory yet.");
-            return;
-        }
-        System.out.println("\n--- Inventory (" + inventory.size() + " item(s)) ---");
-        for (int i = 0; i < inventory.size(); i++) {
-            System.out.println((i + 1) + ". " + inventory.get(i).toString());
-        }
+        return null;
     }
 }
