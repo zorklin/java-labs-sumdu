@@ -19,3 +19,6 @@ target/
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+# JSON files
+input.json
