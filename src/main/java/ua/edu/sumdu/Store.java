@@ -1,6 +1,7 @@
 package ua.edu.sumdu;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class Store {
 
@@ -70,4 +71,14 @@ public class Store {
         }
         return result;
     }
+
+    public ArrayList<Phone> getSortedPhones() {
+        ArrayList<Phone> sorted = new ArrayList<>();
+        for (int i = 0; i < items.size(); i++) {
+            sorted.add(items.get(i).getPhone());
+        }
+        Collections.sort(sorted);
+        return sorted;
+    }
 }
+

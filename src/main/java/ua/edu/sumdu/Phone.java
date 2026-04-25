@@ -2,7 +2,7 @@ package ua.edu.sumdu;
 
 import java.util.Objects;
 
-public class Phone {
+public abstract class Phone implements Comparable<Phone> {
 
     protected String type;
     private String brand;
@@ -95,5 +95,14 @@ public class Phone {
     @Override
     public int hashCode() {
         return Objects.hash(brand, model, price, storageCapacity);
+    }
+
+    @Override
+    public int compareTo(Phone other) {
+        int brandCmp = this.brand.compareToIgnoreCase(other.brand);
+        if (brandCmp != 0) {
+            return brandCmp;
+        }
+        return this.model.compareToIgnoreCase(other.model);
     }
 }

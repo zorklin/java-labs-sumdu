@@ -45,12 +45,13 @@ public class Main {
                 case 1 -> handleCreateMenu(store, scanner);
                 case 2 -> store.printAll();
                 case 3 -> handleSearchMenu(store, scanner);
-                case 4 -> {
+                case 4 -> printSortedPhones(store);
+                case 5 -> {
                     running = false;
                     saveToFile(store);
                     System.out.println("Data saved to " + FILE_PATH + ". Goodbye!");
                 }
-                default -> System.out.println("[Error] Unknown option. Choose 1-4.");
+                default -> System.out.println("[Error] Unknown option. Choose 1-5.");
             }
         }
 
@@ -116,7 +117,8 @@ public class Main {
         System.out.println("1. Add device to store");
         System.out.println("2. List all devices");
         System.out.println("3. Search devices");
-        System.out.println("4. Exit");
+        System.out.println("4. Вивести відсортовану інформацію про всі телефони");
+        System.out.println("5. Exit");
         System.out.print("Your choice: ");
     }
 
@@ -228,6 +230,18 @@ public class Main {
         System.out.println("\n--- Search Results (" + results.size() + " found) ---");
         for (int i = 0; i < results.size(); i++) {
             System.out.println((i + 1) + ". " + results.get(i).toString());
+        }
+    }
+
+    private static void printSortedPhones(Store store) {
+        ArrayList<Phone> sorted = store.getSortedPhones();
+        if (sorted.isEmpty()) {
+            System.out.println("  No devices in the store yet.");
+            return;
+        }
+        System.out.println("\n--- Sorted Phones (" + sorted.size() + " total) ---");
+        for (int i = 0; i < sorted.size(); i++) {
+            System.out.println((i + 1) + ". " + sorted.get(i).toString());
         }
     }
 

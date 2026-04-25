@@ -28,17 +28,17 @@ class PhoneTest {
 
     @Test
     void phone_shouldThrow_whenBrandIsEmpty() {
-        assertThrows(IllegalArgumentException.class, () -> new Phone("", "Model X", 10000.0, 64));
+        assertThrows(IllegalArgumentException.class, () -> new SmartPhone("", "Model X", 10000.0, 64, "iOS"));
     }
 
     @Test
     void phone_shouldThrow_whenPriceIsNegative() {
-        assertThrows(IllegalArgumentException.class, () -> new Phone("Brand", "Model", -1.0, 64));
+        assertThrows(IllegalArgumentException.class, () -> new SmartPhone("Brand", "Model", -1.0, 64, "iOS"));
     }
 
     @Test
     void phone_shouldThrow_whenStorageIsZero() {
-        assertThrows(IllegalArgumentException.class, () -> new Phone("Brand", "Model", 1000.0, 0));
+        assertThrows(IllegalArgumentException.class, () -> new SmartPhone("Brand", "Model", 1000.0, 0, "iOS"));
     }
 
     @Test
@@ -395,5 +395,32 @@ class PhoneTest {
             throw new RuntimeException(e);
         }
         return store;
+    }
+
+    @Test
+    void store_getSortedPhones_shouldReturnSortedList() {
+        Store store = new Store();
+        store.addNewPhone(new SmartPhone("Samsung", "Galaxy S24", 36499.0, 256, "Android"), 1);
+        store.addNewPhone(new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS"), 1);
+        store.addNewPhone(new KeypadPhone("Nokia", "3310", 999.0, 32, true), 1);
+
+        ArrayList<Phone> sorted = store.getSortedPhones();
+
+        assertEquals(3, sorted.size());
+        assertEquals("Apple", sorted.get(0).getBrand());
+        assertEquals("Nokia", sorted.get(1).getBrand());
+        assertEquals("Samsung", sorted.get(2).getBrand());
+    }
+
+    @Test
+    void compareTo_shouldWorkCorrectly() {
+        SmartPhone apple = new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS");
+        SmartPhone samsung = new SmartPhone("Samsung", "Galaxy S24", 36499.0, 256, "Android");
+        SmartPhone appleOther = new SmartPhone("Apple", "iPhone 14", 35000.0, 128, "iOS");
+
+        assertTrue(apple.compareTo(samsung) < 0);
+        assertTrue(samsung.compareTo(apple) > 0);
+        assertEquals(0, apple.compareTo(new SmartPhone("apple", "iphone 15", 42999.0, 128, "iOS")));
+        assertTrue(appleOther.compareTo(apple) < 0);
     }
 }
