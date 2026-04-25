@@ -8,6 +8,7 @@ public class SmartPhone extends Phone {
 
     public SmartPhone(String brand, String model, double price, int storageCapacity, String operatingSystem) {
         super(brand, model, price, storageCapacity);
+        this.type = "SmartPhone";
         setOperatingSystem(operatingSystem);
     }
 

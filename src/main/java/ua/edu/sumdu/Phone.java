@@ -4,16 +4,22 @@ import java.util.Objects;
 
 public class Phone {
 
+    protected String type;
     private String brand;
     private String model;
     private double price;
     private int storageCapacity;
 
     public Phone(String brand, String model, double price, int storageCapacity) {
+        this.type = "Phone";
         setBrand(brand);
         setModel(model);
         setPrice(price);
         setStorageCapacity(storageCapacity);
+    }
+
+    public String getType() {
+        return type;
     }
 
     public String getBrand() {

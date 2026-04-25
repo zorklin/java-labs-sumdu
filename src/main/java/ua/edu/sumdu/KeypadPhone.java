@@ -8,6 +8,7 @@ public class KeypadPhone extends Phone {
 
     public KeypadPhone(String brand, String model, double price, int storageCapacity, boolean hasFlashlight) {
         super(brand, model, price, storageCapacity);
+        this.type = "KeypadPhone";
         this.hasFlashlight = hasFlashlight;
     }
 

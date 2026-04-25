@@ -8,6 +8,7 @@ public class LandlinePhone extends Phone {
 
     public LandlinePhone(String brand, String model, double price, int storageCapacity, boolean isCordless) {
         super(brand, model, price, storageCapacity);
+        this.type = "LandlinePhone";
         this.isCordless = isCordless;
     }
 

@@ -8,6 +8,7 @@ public class SatellitePhone extends Phone {
 
     public SatellitePhone(String brand, String model, double price, int storageCapacity, String satelliteNetwork) {
         super(brand, model, price, storageCapacity);
+        this.type = "SatellitePhone";
         setSatelliteNetwork(satelliteNetwork);
     }
 
