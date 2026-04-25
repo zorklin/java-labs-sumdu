@@ -4,16 +4,34 @@ import java.util.Objects;
 
 public class Phone {
 
+    private static int objectCount = 0;
+
     private String brand;
     private String model;
     private double price;
     private int storageCapacity;
+    private PhoneType type;
 
-    public Phone(String brand, String model, double price, int storageCapacity) {
+    public Phone(String brand, String model, double price, int storageCapacity, PhoneType type) {
         setBrand(brand);
         setModel(model);
         setPrice(price);
         setStorageCapacity(storageCapacity);
+        setType(type);
+        objectCount++;
+    }
+
+    public Phone(Phone other) {
+        setBrand(other.brand);
+        setModel(other.model);
+        setPrice(other.price);
+        setStorageCapacity(other.storageCapacity);
+        setType(other.type);
+        objectCount++;
+    }
+
+    public static int getObjectCount() {
+        return objectCount;
     }
 
     public String getBrand() {
@@ -30,6 +48,10 @@ public class Phone {
 
     public int getStorageCapacity() {
         return storageCapacity;
+    }
+
+    public PhoneType getType() {
+        return type;
     }
 
     public void setBrand(String brand) {
@@ -61,6 +83,13 @@ public class Phone {
         this.storageCapacity = storageCapacity;
     }
 
+    public void setType(PhoneType type) {
+        if (type == null) {
+            throw new IllegalArgumentException("Type must not be null.");
+        }
+        this.type = type;
+    }
+
     @Override
     public String toString() {
         return "Phone{"
@@ -68,6 +97,7 @@ public class Phone {
                 + ", model='" + model + '\''
                 + ", price=" + price
                 + ", storageCapacity=" + storageCapacity + " GB"
+                + ", type=" + type
                 + '}';
     }
 
@@ -83,11 +113,12 @@ public class Phone {
         return Double.compare(phone.price, price) == 0
                 && storageCapacity == phone.storageCapacity
                 && Objects.equals(brand, phone.brand)
-                && Objects.equals(model, phone.model);
+                && Objects.equals(model, phone.model)
+                && type == phone.type;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(brand, model, price, storageCapacity);
+        return Objects.hash(brand, model, price, storageCapacity, type);
     }
 }
