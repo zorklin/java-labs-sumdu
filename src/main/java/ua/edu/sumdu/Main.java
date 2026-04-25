@@ -44,12 +44,13 @@ public class Main {
             switch (choice) {
                 case 1 -> handleCreateMenu(inventory, scanner);
                 case 2 -> listDevices(inventory);
-                case 3 -> {
+                case 3 -> handleSearchMenu(inventory, scanner);
+                case 4 -> {
                     running = false;
                     saveToFile(inventory);
                     System.out.println("Data saved to " + FILE_PATH + ". Goodbye!");
                 }
-                default -> System.out.println("[Error] Unknown option. Choose 1-3.");
+                default -> System.out.println("[Error] Unknown option. Choose 1-4.");
             }
         }
 
@@ -106,8 +107,103 @@ public class Main {
         System.out.println("\n--- MAIN MENU ---");
         System.out.println("1. Create new device");
         System.out.println("2. List all devices");
-        System.out.println("3. Exit");
+        System.out.println("3. Search devices");
+        System.out.println("4. Exit");
         System.out.print("Your choice: ");
+    }
+
+    private static void handleSearchMenu(ArrayList<Phone> inventory, Scanner scanner) {
+        boolean inSearch = true;
+        while (inSearch) {
+            System.out.println("\n--- SEARCH ---");
+            System.out.println("1. Search by brand");
+            System.out.println("2. Search by price range");
+            System.out.println("3. Search by minimum storage");
+            System.out.println("0. Back");
+            System.out.print("Your choice: ");
+
+            int choice = -1;
+            try {
+                choice = scanner.nextInt();
+            } catch (InputMismatchException e) {
+                System.out.println("[Error] Please enter a number.");
+            } finally {
+                scanner.nextLine();
+            }
+
+            switch (choice) {
+                case 1 -> {
+                    System.out.print("  Brand (partial match) : ");
+                    String brand = scanner.nextLine().trim();
+                    printSearchResults(findByBrand(inventory, brand));
+                }
+                case 2 -> {
+                    try {
+                        System.out.print("  Min price (UAH) : ");
+                        double min = Double.parseDouble(scanner.nextLine().trim());
+                        System.out.print("  Max price (UAH) : ");
+                        double max = Double.parseDouble(scanner.nextLine().trim());
+                        printSearchResults(findByPriceRange(inventory, min, max));
+                    } catch (NumberFormatException e) {
+                        System.out.println("[Error] Invalid numeric value.");
+                    }
+                }
+                case 3 -> {
+                    try {
+                        System.out.print("  Min storage (GB) : ");
+                        int minStorage = Integer.parseInt(scanner.nextLine().trim());
+                        printSearchResults(findByStorage(inventory, minStorage));
+                    } catch (NumberFormatException e) {
+                        System.out.println("[Error] Invalid numeric value.");
+                    }
+                }
+                case 0 -> inSearch = false;
+                default -> System.out.println("[Error] Unknown option.");
+            }
+        }
+    }
+
+    static ArrayList<Phone> findByBrand(ArrayList<Phone> inventory, String brand) {
+        ArrayList<Phone> result = new ArrayList<>();
+        String lowerBrand = brand.toLowerCase();
+        for (int i = 0; i < inventory.size(); i++) {
+            if (inventory.get(i).getBrand().toLowerCase().contains(lowerBrand)) {
+                result.add(inventory.get(i));
+            }
+        }
+        return result;
+    }
+
+    static ArrayList<Phone> findByPriceRange(ArrayList<Phone> inventory, double min, double max) {
+        ArrayList<Phone> result = new ArrayList<>();
+        for (int i = 0; i < inventory.size(); i++) {
+            double price = inventory.get(i).getPrice();
+            if (price >= min && price <= max) {
+                result.add(inventory.get(i));
+            }
+        }
+        return result;
+    }
+
+    static ArrayList<Phone> findByStorage(ArrayList<Phone> inventory, int minStorage) {
+        ArrayList<Phone> result = new ArrayList<>();
+        for (int i = 0; i < inventory.size(); i++) {
+            if (inventory.get(i).getStorageCapacity() >= minStorage) {
+                result.add(inventory.get(i));
+            }
+        }
+        return result;
+    }
+
+    private static void printSearchResults(ArrayList<Phone> results) {
+        if (results.isEmpty()) {
+            System.out.println("  Збігів не знайдено.");
+            return;
+        }
+        System.out.println("\n--- Search Results (" + results.size() + " found) ---");
+        for (int i = 0; i < results.size(); i++) {
+            System.out.println((i + 1) + ". " + results.get(i).toString());
+        }
     }
 
     private static void handleCreateMenu(ArrayList<Phone> inventory, Scanner scanner) {
