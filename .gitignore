@@ -22,3 +22,6 @@ Thumbs.db
 
 # JSON files
 input.json
+
+# Database files
+*.db

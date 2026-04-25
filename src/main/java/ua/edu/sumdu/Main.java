@@ -22,6 +22,21 @@ public class Main {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static void main(String[] args) {
+        DatabaseManager dbManager = new DatabaseManager();
+
+        if (args.length > 0) {
+            try {
+                dbManager.loadConfig(args[0]);
+                dbManager.initializeDatabase();
+                System.out.println("Database config loaded from: " + args[0]);
+            } catch (IOException e) {
+                System.out.println("[Warning] Could not load DB config: " + e.getMessage());
+            }
+        } else {
+            System.out.println("[Warning] No config path provided. DB saving disabled.");
+            dbManager = null;
+        }
+
         Store store = loadFromFile();
         Scanner scanner = new Scanner(System.in);
         boolean running = true;
@@ -42,7 +57,7 @@ public class Main {
             }
 
             switch (choice) {
-                case 1 -> handleCreateMenu(store, scanner);
+                case 1 -> handleCreateMenu(store, scanner, dbManager);
                 case 2 -> store.printAll();
                 case 3 -> handleSearchMenu(store, scanner);
                 case 4 -> {
@@ -120,7 +135,7 @@ public class Main {
         System.out.print("Your choice: ");
     }
 
-    private static void handleCreateMenu(Store store, Scanner scanner) {
+    private static void handleCreateMenu(Store store, Scanner scanner, DatabaseManager dbManager) {
         System.out.println("\n--- SELECT TYPE ---");
         System.out.println("1. SmartPhone");
         System.out.println("2. KeypadPhone");
@@ -167,6 +182,11 @@ public class Main {
 
         store.addNewPhone(phone, quantity);
         System.out.println("[OK] Added: " + phone + " x" + quantity);
+
+        if (dbManager != null) {
+            dbManager.savePhone(phone);
+            System.out.println("[DB] Phone saved to database.");
+        }
     }
 
     private static void handleSearchMenu(Store store, Scanner scanner) {
