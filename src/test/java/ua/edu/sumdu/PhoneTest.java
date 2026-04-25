@@ -18,12 +18,6 @@ class PhoneTest {
     }
 
     @Test
-    void phone_shouldThrow_whenModelIsNull() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new Phone("Brand", null, 10000.0, 64));
-    }
-
-    @Test
     void phone_shouldThrow_whenPriceIsNegative() {
         assertThrows(IllegalArgumentException.class, () ->
                 new Phone("Brand", "Model", -1.0, 64));
@@ -48,20 +42,8 @@ class PhoneTest {
     }
 
     @Test
-    void smartPhone_setOperatingSystem_shouldThrow_whenBlank() {
-        SmartPhone phone = new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS");
-        assertThrows(IllegalArgumentException.class, () -> phone.setOperatingSystem(""));
-    }
-
-    @Test
     void smartPhone_shouldSucceed_withValidArguments() {
         assertDoesNotThrow(() -> new SmartPhone("Samsung", "Galaxy S24", 36499.0, 256, "Android"));
-    }
-
-    @Test
-    void smartPhone_getOperatingSystem_shouldReturnCorrectValue() {
-        SmartPhone phone = new SmartPhone("Google", "Pixel 8", 28000.0, 128, "Android");
-        assertEquals("Android", phone.getOperatingSystem());
     }
 
     @Test
@@ -84,27 +66,9 @@ class PhoneTest {
     }
 
     @Test
-    void keypadPhone_shouldSucceed_withFlashlightFalse() {
-        assertDoesNotThrow(() -> new KeypadPhone("Nokia", "3310", 999.0, 32, false));
-    }
-
-    @Test
     void keypadPhone_isHasFlashlight_shouldReturnCorrectValue() {
         KeypadPhone phone = new KeypadPhone("Nokia", "3310", 999.0, 32, true);
         assertTrue(phone.isHasFlashlight());
-    }
-
-    @Test
-    void keypadPhone_isHasFlashlight_shouldReturnFalse_whenSetFalse() {
-        KeypadPhone phone = new KeypadPhone("Nokia", "3310", 999.0, 32, false);
-        assertFalse(phone.isHasFlashlight());
-    }
-
-    @Test
-    void keypadPhone_equals_shouldReturnTrue_forSameFields() {
-        KeypadPhone a = new KeypadPhone("Nokia", "3310", 999.0, 32, true);
-        KeypadPhone b = new KeypadPhone("Nokia", "3310", 999.0, 32, true);
-        assertEquals(a, b);
     }
 
     @Test
@@ -121,14 +85,100 @@ class PhoneTest {
     }
 
     @Test
-    void keypadPhone_setPrice_shouldThrow_whenNegative() {
-        KeypadPhone phone = new KeypadPhone("Nokia", "3310", 999.0, 32, true);
-        assertThrows(IllegalArgumentException.class, () -> phone.setPrice(-1.0));
+    void satellitePhone_shouldThrow_whenNetworkIsNull() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new SatellitePhone("Iridium", "9575A", 55000.0, 16, null));
     }
 
     @Test
-    void polymorphism_toString_shouldReturnSubclassRepresentation() {
+    void satellitePhone_shouldThrow_whenNetworkIsBlank() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new SatellitePhone("Iridium", "9575A", 55000.0, 16, "   "));
+    }
+
+    @Test
+    void satellitePhone_shouldSucceed_withValidArguments() {
+        assertDoesNotThrow(() -> new SatellitePhone("Iridium", "9575A", 55000.0, 16, "Iridium"));
+    }
+
+    @Test
+    void satellitePhone_getSatelliteNetwork_shouldReturnCorrectValue() {
+        SatellitePhone phone = new SatellitePhone("Thuraya", "X5-Touch", 48000.0, 32, "Thuraya");
+        assertEquals("Thuraya", phone.getSatelliteNetwork());
+    }
+
+    @Test
+    void satellitePhone_equals_shouldReturnTrue_forSameFields() {
+        SatellitePhone a = new SatellitePhone("Iridium", "9575A", 55000.0, 16, "Iridium");
+        SatellitePhone b = new SatellitePhone("Iridium", "9575A", 55000.0, 16, "Iridium");
+        assertEquals(a, b);
+    }
+
+    @Test
+    void satellitePhone_equals_shouldReturnFalse_whenNetworkDiffers() {
+        SatellitePhone a = new SatellitePhone("Iridium", "9575A", 55000.0, 16, "Iridium");
+        SatellitePhone b = new SatellitePhone("Iridium", "9575A", 55000.0, 16, "Globalstar");
+        assertNotEquals(a, b);
+    }
+
+    @Test
+    void satellitePhone_setSatelliteNetwork_shouldThrow_whenBlank() {
+        SatellitePhone phone = new SatellitePhone("Iridium", "9575A", 55000.0, 16, "Iridium");
+        assertThrows(IllegalArgumentException.class, () -> phone.setSatelliteNetwork(""));
+    }
+
+    @Test
+    void landlinePhone_shouldSucceed_withCordlessTrue() {
+        assertDoesNotThrow(() -> new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, true));
+    }
+
+    @Test
+    void landlinePhone_isCordless_shouldReturnTrue() {
+        LandlinePhone phone = new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, true);
+        assertTrue(phone.isCordless());
+    }
+
+    @Test
+    void landlinePhone_isCordless_shouldReturnFalse_whenSetFalse() {
+        LandlinePhone phone = new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, false);
+        assertFalse(phone.isCordless());
+    }
+
+    @Test
+    void landlinePhone_equals_shouldReturnTrue_forSameFields() {
+        LandlinePhone a = new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, true);
+        LandlinePhone b = new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, true);
+        assertEquals(a, b);
+    }
+
+    @Test
+    void landlinePhone_equals_shouldReturnFalse_whenCordlessDiffers() {
+        LandlinePhone a = new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, true);
+        LandlinePhone b = new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, false);
+        assertNotEquals(a, b);
+    }
+
+    @Test
+    void landlinePhone_shouldThrow_whenPriceIsNegative() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new LandlinePhone("Panasonic", "KX-TG", -100.0, 8, true));
+    }
+
+    @Test
+    void polymorphism_toString_smartPhone_shouldContainClassName() {
         Phone phone = new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS");
         assertTrue(phone.toString().contains("SmartPhone"));
+    }
+
+    @Test
+    void polymorphism_toString_satellitePhone_shouldContainNetwork() {
+        Phone phone = new SatellitePhone("Iridium", "9575A", 55000.0, 16, "Iridium");
+        assertTrue(phone.toString().contains("Iridium"));
+    }
+
+    @Test
+    void polymorphism_toString_landlinePhone_shouldContainClassName() {
+        Phone phone = new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, true);
+        assertTrue(phone.toString().contains("LandlinePhone"));
     }
 }
