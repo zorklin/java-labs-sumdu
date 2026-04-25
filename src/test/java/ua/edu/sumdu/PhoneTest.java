@@ -16,6 +16,16 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 class PhoneTest {
 
+    private ArrayList<Phone> buildInventory() {
+        ArrayList<Phone> inventory = new ArrayList<>();
+        inventory.add(new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS"));
+        inventory.add(new SmartPhone("Samsung", "Galaxy S24", 36499.0, 256, "Android"));
+        inventory.add(new KeypadPhone("Nokia", "3310", 999.0, 32, true));
+        inventory.add(new SatellitePhone("Iridium", "9575A", 55000.0, 16, "Iridium"));
+        inventory.add(new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, false));
+        return inventory;
+    }
+
     @Test
     void phone_shouldThrow_whenBrandIsEmpty() {
         assertThrows(IllegalArgumentException.class, () ->
@@ -191,6 +201,98 @@ class PhoneTest {
     void polymorphism_toString_landlinePhone_shouldContainClassName() {
         Phone phone = new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, true);
         assertTrue(phone.toString().contains("LandlinePhone"));
+    }
+
+    @Test
+    void findByBrand_shouldReturnMatchingDevices() {
+        ArrayList<Phone> inventory = buildInventory();
+        ArrayList<Phone> result = Main.findByBrand(inventory, "apple");
+        assertEquals(1, result.size());
+        assertEquals("Apple", result.get(0).getBrand());
+    }
+
+    @Test
+    void findByBrand_shouldBeCaseInsensitive() {
+        ArrayList<Phone> inventory = buildInventory();
+        ArrayList<Phone> lower = Main.findByBrand(inventory, "samsung");
+        ArrayList<Phone> upper = Main.findByBrand(inventory, "SAMSUNG");
+        assertEquals(lower.size(), upper.size());
+        assertEquals(1, lower.size());
+    }
+
+    @Test
+    void findByBrand_shouldSupportPartialMatch() {
+        ArrayList<Phone> inventory = buildInventory();
+        ArrayList<Phone> result = Main.findByBrand(inventory, "son");
+        assertEquals(0, result.size());
+
+        ArrayList<Phone> result2 = Main.findByBrand(inventory, "sung");
+        assertEquals(1, result2.size());
+    }
+
+    @Test
+    void findByBrand_shouldReturnEmpty_whenNoMatch() {
+        ArrayList<Phone> inventory = buildInventory();
+        ArrayList<Phone> result = Main.findByBrand(inventory, "Motorola");
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void findByPriceRange_shouldReturnDevicesInRange() {
+        ArrayList<Phone> inventory = buildInventory();
+        ArrayList<Phone> result = Main.findByPriceRange(inventory, 1000.0, 40000.0);
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void findByPriceRange_shouldIncludeBoundaryValues() {
+        ArrayList<Phone> inventory = buildInventory();
+        ArrayList<Phone> result = Main.findByPriceRange(inventory, 999.0, 999.0);
+        assertEquals(1, result.size());
+        assertEquals("Nokia", result.get(0).getBrand());
+    }
+
+    @Test
+    void findByPriceRange_shouldReturnEmpty_whenNoMatch() {
+        ArrayList<Phone> inventory = buildInventory();
+        ArrayList<Phone> result = Main.findByPriceRange(inventory, 100000.0, 200000.0);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void findByPriceRange_shouldReturnAll_whenRangeCoversAll() {
+        ArrayList<Phone> inventory = buildInventory();
+        ArrayList<Phone> result = Main.findByPriceRange(inventory, 0.0, 1_000_000.0);
+        assertEquals(inventory.size(), result.size());
+    }
+
+    @Test
+    void findByStorage_shouldReturnDevicesWithSufficientStorage() {
+        ArrayList<Phone> inventory = buildInventory();
+        ArrayList<Phone> result = Main.findByStorage(inventory, 128);
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void findByStorage_shouldIncludeBoundaryValue() {
+        ArrayList<Phone> inventory = buildInventory();
+        ArrayList<Phone> result = Main.findByStorage(inventory, 256);
+        assertEquals(1, result.size());
+        assertEquals("Samsung", result.get(0).getBrand());
+    }
+
+    @Test
+    void findByStorage_shouldReturnEmpty_whenNoMatch() {
+        ArrayList<Phone> inventory = buildInventory();
+        ArrayList<Phone> result = Main.findByStorage(inventory, 512);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void findByStorage_shouldReturnAll_whenMinIsOne() {
+        ArrayList<Phone> inventory = buildInventory();
+        ArrayList<Phone> result = Main.findByStorage(inventory, 1);
+        assertEquals(inventory.size(), result.size());
     }
 
     @Test
