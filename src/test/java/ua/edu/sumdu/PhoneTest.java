@@ -16,14 +16,14 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 class PhoneTest {
 
-    private ArrayList<Phone> buildInventory() {
-        ArrayList<Phone> inventory = new ArrayList<>();
-        inventory.add(new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS"));
-        inventory.add(new SmartPhone("Samsung", "Galaxy S24", 36499.0, 256, "Android"));
-        inventory.add(new KeypadPhone("Nokia", "3310", 999.0, 32, true));
-        inventory.add(new SatellitePhone("Iridium", "9575A", 55000.0, 16, "Iridium"));
-        inventory.add(new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, false));
-        return inventory;
+    private Store buildStore() {
+        Store store = new Store();
+        store.addNewPhone(new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS"), 1);
+        store.addNewPhone(new SmartPhone("Samsung", "Galaxy S24", 36499.0, 256, "Android"), 1);
+        store.addNewPhone(new KeypadPhone("Nokia", "3310", 999.0, 32, true), 1);
+        store.addNewPhone(new SatellitePhone("Iridium", "9575A", 55000.0, 16, "Iridium"), 1);
+        store.addNewPhone(new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, false), 1);
+        return store;
     }
 
     @Test
@@ -195,157 +195,172 @@ class PhoneTest {
     }
 
     @Test
-    void findByBrand_shouldReturnMatchingDevices() {
-        ArrayList<Phone> inventory = buildInventory();
-        ArrayList<Phone> result = Main.findByBrand(inventory, "apple");
+    void store_addNewPhone_shouldMergeQuantity_whenPhoneAlreadyExists() {
+        Store store = new Store();
+        SmartPhone phone = new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS");
+        store.addNewPhone(phone, 2);
+        store.addNewPhone(new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS"), 3);
+
+        assertEquals(1, store.getItems().size());
+        assertEquals(5, store.getItems().get(0).getQuantity());
+    }
+
+    @Test
+    void store_addNewPhone_shouldAddNewEntry_whenPhoneIsDistinct() {
+        Store store = new Store();
+        store.addNewPhone(new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS"), 1);
+        store.addNewPhone(new SmartPhone("Samsung", "Galaxy S24", 36499.0, 256, "Android"), 1);
+
+        assertEquals(2, store.getItems().size());
+    }
+
+    @Test
+    void store_addNewPhone_shouldPreserveQuantityOfOtherEntries_whenMerging() {
+        Store store = new Store();
+        SmartPhone apple = new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS");
+        SmartPhone samsung = new SmartPhone("Samsung", "Galaxy S24", 36499.0, 256, "Android");
+        store.addNewPhone(apple, 1);
+        store.addNewPhone(samsung, 4);
+        store.addNewPhone(new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS"), 2);
+
+        assertEquals(2, store.getItems().size());
+        assertEquals(3, store.getItems().get(0).getQuantity());
+        assertEquals(4, store.getItems().get(1).getQuantity());
+    }
+
+    @Test
+    void store_findByBrand_shouldReturnMatchingDevices() {
+        Store store = buildStore();
+        ArrayList<Phone> result = store.findByBrand("apple");
         assertEquals(1, result.size());
         assertEquals("Apple", result.get(0).getBrand());
     }
 
     @Test
-    void findByBrand_shouldBeCaseInsensitive() {
-        ArrayList<Phone> inventory = buildInventory();
-        ArrayList<Phone> lower = Main.findByBrand(inventory, "samsung");
-        ArrayList<Phone> upper = Main.findByBrand(inventory, "SAMSUNG");
+    void store_findByBrand_shouldBeCaseInsensitive() {
+        Store store = buildStore();
+        ArrayList<Phone> lower = store.findByBrand("samsung");
+        ArrayList<Phone> upper = store.findByBrand("SAMSUNG");
         assertEquals(lower.size(), upper.size());
         assertEquals(1, lower.size());
     }
 
     @Test
-    void findByBrand_shouldSupportPartialMatch() {
-        ArrayList<Phone> inventory = buildInventory();
-        ArrayList<Phone> result = Main.findByBrand(inventory, "son");
+    void store_findByBrand_shouldSupportPartialMatch() {
+        Store store = buildStore();
+        ArrayList<Phone> result = store.findByBrand("sung");
         assertEquals(1, result.size());
-
-        ArrayList<Phone> result2 = Main.findByBrand(inventory, "sung");
-        assertEquals(1, result2.size());
     }
 
     @Test
-    void findByBrand_shouldReturnEmpty_whenNoMatch() {
-        ArrayList<Phone> inventory = buildInventory();
-        ArrayList<Phone> result = Main.findByBrand(inventory, "Motorola");
+    void store_findByBrand_shouldReturnEmpty_whenNoMatch() {
+        Store store = buildStore();
+        ArrayList<Phone> result = store.findByBrand("Motorola");
         assertTrue(result.isEmpty());
     }
 
     @Test
-    void findByPriceRange_shouldReturnDevicesInRange() {
-        ArrayList<Phone> inventory = buildInventory();
-        ArrayList<Phone> result = Main.findByPriceRange(inventory, 1000.0, 40000.0);
+    void store_findByPriceRange_shouldReturnDevicesInRange() {
+        Store store = buildStore();
+        ArrayList<Phone> result = store.findByPriceRange(1000.0, 40000.0);
         assertEquals(2, result.size());
     }
 
     @Test
-    void findByPriceRange_shouldIncludeBoundaryValues() {
-        ArrayList<Phone> inventory = buildInventory();
-        ArrayList<Phone> result = Main.findByPriceRange(inventory, 999.0, 999.0);
+    void store_findByPriceRange_shouldIncludeBoundaryValues() {
+        Store store = buildStore();
+        ArrayList<Phone> result = store.findByPriceRange(999.0, 999.0);
         assertEquals(1, result.size());
         assertEquals("Nokia", result.get(0).getBrand());
     }
 
     @Test
-    void findByPriceRange_shouldReturnEmpty_whenNoMatch() {
-        ArrayList<Phone> inventory = buildInventory();
-        ArrayList<Phone> result = Main.findByPriceRange(inventory, 100000.0, 200000.0);
+    void store_findByPriceRange_shouldReturnEmpty_whenNoMatch() {
+        Store store = buildStore();
+        ArrayList<Phone> result = store.findByPriceRange(100000.0, 200000.0);
         assertTrue(result.isEmpty());
     }
 
     @Test
-    void findByPriceRange_shouldReturnAll_whenRangeCoversAll() {
-        ArrayList<Phone> inventory = buildInventory();
-        ArrayList<Phone> result = Main.findByPriceRange(inventory, 0.0, 1_000_000.0);
-        assertEquals(inventory.size(), result.size());
+    void store_findByPriceRange_shouldReturnAll_whenRangeCoversAll() {
+        Store store = buildStore();
+        ArrayList<Phone> result = store.findByPriceRange(0.0, 1_000_000.0);
+        assertEquals(store.getItems().size(), result.size());
     }
 
     @Test
-    void findByStorage_shouldReturnDevicesWithSufficientStorage() {
-        ArrayList<Phone> inventory = buildInventory();
-        ArrayList<Phone> result = Main.findByStorage(inventory, 128);
+    void store_findByStorage_shouldReturnDevicesWithSufficientStorage() {
+        Store store = buildStore();
+        ArrayList<Phone> result = store.findByStorage(128);
         assertEquals(2, result.size());
     }
 
     @Test
-    void findByStorage_shouldIncludeBoundaryValue() {
-        ArrayList<Phone> inventory = buildInventory();
-        ArrayList<Phone> result = Main.findByStorage(inventory, 256);
+    void store_findByStorage_shouldIncludeBoundaryValue() {
+        Store store = buildStore();
+        ArrayList<Phone> result = store.findByStorage(256);
         assertEquals(1, result.size());
         assertEquals("Samsung", result.get(0).getBrand());
     }
 
     @Test
-    void findByStorage_shouldReturnEmpty_whenNoMatch() {
-        ArrayList<Phone> inventory = buildInventory();
-        ArrayList<Phone> result = Main.findByStorage(inventory, 512);
+    void store_findByStorage_shouldReturnEmpty_whenNoMatch() {
+        Store store = buildStore();
+        ArrayList<Phone> result = store.findByStorage(512);
         assertTrue(result.isEmpty());
     }
 
     @Test
-    void findByStorage_shouldReturnAll_whenMinIsOne() {
-        ArrayList<Phone> inventory = buildInventory();
-        ArrayList<Phone> result = Main.findByStorage(inventory, 1);
-        assertEquals(inventory.size(), result.size());
+    void store_findByStorage_shouldReturnAll_whenMinIsOne() {
+        Store store = buildStore();
+        ArrayList<Phone> result = store.findByStorage(1);
+        assertEquals(store.getItems().size(), result.size());
     }
 
     @Test
-    void json_saveAndLoad_smartPhone_shouldPreserveAllFields(@TempDir Path tempDir) {
-        String filePath = tempDir.resolve("test.json").toString();
+    void json_saveAndLoad_storeEntry_shouldPreserveQuantityAndType(@TempDir Path tempDir) {
+        String filePath = tempDir.resolve("store.json").toString();
 
-        SmartPhone original = new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS");
-        ArrayList<Phone> toSave = new ArrayList<>();
-        toSave.add(original);
+        Store original = new Store();
+        original.addNewPhone(new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS"), 3);
+        original.addNewPhone(new KeypadPhone("Nokia", "3310", 999.0, 32, true), 5);
 
-        saveToFileWithPath(toSave, filePath);
-        ArrayList<Phone> loaded = loadFromFileWithPath(filePath);
+        saveStoreToPath(original, filePath);
+        Store loaded = loadStoreFromPath(filePath);
 
-        assertEquals(1, loaded.size());
-        assertInstanceOf(SmartPhone.class, loaded.get(0));
-        SmartPhone restored = (SmartPhone) loaded.get(0);
-        assertEquals(original, restored);
-        assertEquals(original.getOperatingSystem(), restored.getOperatingSystem());
+        assertEquals(2, loaded.getItems().size());
+        assertEquals(3, loaded.getItems().get(0).getQuantity());
+        assertEquals(5, loaded.getItems().get(1).getQuantity());
+        assertInstanceOf(SmartPhone.class, loaded.getItems().get(0).getPhone());
+        assertInstanceOf(KeypadPhone.class, loaded.getItems().get(1).getPhone());
     }
 
     @Test
-    void json_saveAndLoad_keypadPhone_shouldPreserveFlashlight(@TempDir Path tempDir) {
-        String filePath = tempDir.resolve("test.json").toString();
+    void json_saveAndLoad_shouldMergeOnLoad_whenSamePhoneAddedTwice(@TempDir Path tempDir) {
+        String filePath = tempDir.resolve("store.json").toString();
 
-        KeypadPhone original = new KeypadPhone("Nokia", "3310", 999.0, 32, true);
-        ArrayList<Phone> toSave = new ArrayList<>();
-        toSave.add(original);
+        Store original = new Store();
+        SmartPhone phone = new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS");
+        original.addNewPhone(phone, 2);
+        original.addNewPhone(new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS"), 3);
 
-        saveToFileWithPath(toSave, filePath);
-        ArrayList<Phone> loaded = loadFromFileWithPath(filePath);
+        saveStoreToPath(original, filePath);
+        Store loaded = loadStoreFromPath(filePath);
 
-        assertEquals(1, loaded.size());
-        assertInstanceOf(KeypadPhone.class, loaded.get(0));
-        KeypadPhone restored = (KeypadPhone) loaded.get(0);
-        assertEquals(original.isHasFlashlight(), restored.isHasFlashlight());
+        assertEquals(1, loaded.getItems().size());
+        assertEquals(5, loaded.getItems().get(0).getQuantity());
     }
 
-    @Test
-    void json_saveAndLoad_multipleTypes_shouldPreserveCount(@TempDir Path tempDir) {
-        String filePath = tempDir.resolve("test.json").toString();
-
-        ArrayList<Phone> toSave = new ArrayList<>();
-        toSave.add(new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS"));
-        toSave.add(new KeypadPhone("Nokia", "3310", 999.0, 32, true));
-        toSave.add(new SatellitePhone("Iridium", "9575A", 55000.0, 16, "Iridium"));
-        toSave.add(new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, false));
-
-        saveToFileWithPath(toSave, filePath);
-        ArrayList<Phone> loaded = loadFromFileWithPath(filePath);
-
-        assertEquals(4, loaded.size());
-        assertInstanceOf(SmartPhone.class, loaded.get(0));
-        assertInstanceOf(KeypadPhone.class, loaded.get(1));
-        assertInstanceOf(SatellitePhone.class, loaded.get(2));
-        assertInstanceOf(LandlinePhone.class, loaded.get(3));
-    }
-
-    private void saveToFileWithPath(ArrayList<Phone> inventory, String path) {
+    private void saveStoreToPath(Store store, String path) {
         com.google.gson.Gson gson = new com.google.gson.GsonBuilder().setPrettyPrinting().create();
         com.google.gson.JsonArray array = new com.google.gson.JsonArray();
-        for (int i = 0; i < inventory.size(); i++) {
-            array.add(gson.toJsonTree(inventory.get(i)));
+        ArrayList<StoreEntry> items = store.getItems();
+        for (int i = 0; i < items.size(); i++) {
+            StoreEntry entry = items.get(i);
+            com.google.gson.JsonObject entryObj = new com.google.gson.JsonObject();
+            entryObj.add("phone", gson.toJsonTree(entry.getPhone()));
+            entryObj.addProperty("quantity", entry.getQuantity());
+            array.add(entryObj);
         }
         try (java.io.FileWriter writer = new java.io.FileWriter(path)) {
             gson.toJson(array, writer);
@@ -354,29 +369,31 @@ class PhoneTest {
         }
     }
 
-    private ArrayList<Phone> loadFromFileWithPath(String path) {
+    private Store loadStoreFromPath(String path) {
         com.google.gson.Gson gson = new com.google.gson.GsonBuilder().setPrettyPrinting().create();
-        ArrayList<Phone> result = new ArrayList<>();
+        Store store = new Store();
         try (java.io.FileReader reader = new java.io.FileReader(path)) {
             com.google.gson.JsonArray array = com.google.gson.JsonParser.parseReader(reader).getAsJsonArray();
             for (int i = 0; i < array.size(); i++) {
-                com.google.gson.JsonObject obj = array.get(i).getAsJsonObject();
-                String type = obj.get("type").getAsString();
+                com.google.gson.JsonObject entryObj = array.get(i).getAsJsonObject();
+                com.google.gson.JsonObject phoneObj = entryObj.getAsJsonObject("phone");
+                String type = phoneObj.get("type").getAsString();
                 Phone phone = null;
                 switch (type) {
-                    case "SmartPhone" -> phone = gson.fromJson(obj, SmartPhone.class);
-                    case "KeypadPhone" -> phone = gson.fromJson(obj, KeypadPhone.class);
-                    case "SatellitePhone" -> phone = gson.fromJson(obj, SatellitePhone.class);
-                    case "LandlinePhone" -> phone = gson.fromJson(obj, LandlinePhone.class);
-                    default -> phone = gson.fromJson(obj, Phone.class);
+                    case "SmartPhone" -> phone = gson.fromJson(phoneObj, SmartPhone.class);
+                    case "KeypadPhone" -> phone = gson.fromJson(phoneObj, KeypadPhone.class);
+                    case "SatellitePhone" -> phone = gson.fromJson(phoneObj, SatellitePhone.class);
+                    case "LandlinePhone" -> phone = gson.fromJson(phoneObj, LandlinePhone.class);
+                    default -> phone = gson.fromJson(phoneObj, Phone.class);
                 }
+                int quantity = entryObj.has("quantity") ? entryObj.get("quantity").getAsInt() : 1;
                 if (phone != null) {
-                    result.add(phone);
+                    store.addNewPhone(phone, quantity);
                 }
             }
         } catch (java.io.IOException e) {
             throw new RuntimeException(e);
         }
-        return result;
+        return store;
     }
 }
