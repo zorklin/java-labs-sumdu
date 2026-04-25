@@ -28,32 +28,27 @@ class PhoneTest {
 
     @Test
     void phone_shouldThrow_whenBrandIsEmpty() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new Phone("", "Model X", 10000.0, 64));
+        assertThrows(IllegalArgumentException.class, () -> new Phone("", "Model X", 10000.0, 64));
     }
 
     @Test
     void phone_shouldThrow_whenPriceIsNegative() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new Phone("Brand", "Model", -1.0, 64));
+        assertThrows(IllegalArgumentException.class, () -> new Phone("Brand", "Model", -1.0, 64));
     }
 
     @Test
     void phone_shouldThrow_whenStorageIsZero() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new Phone("Brand", "Model", 1000.0, 0));
+        assertThrows(IllegalArgumentException.class, () -> new Phone("Brand", "Model", 1000.0, 0));
     }
 
     @Test
     void smartPhone_shouldThrow_whenOperatingSystemIsBlank() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "   "));
+        assertThrows(IllegalArgumentException.class, () -> new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "   "));
     }
 
     @Test
     void smartPhone_shouldThrow_whenOperatingSystemIsNull() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new SmartPhone("Apple", "iPhone 15", 42999.0, 128, null));
+        assertThrows(IllegalArgumentException.class, () -> new SmartPhone("Apple", "iPhone 15", 42999.0, 128, null));
     }
 
     @Test
@@ -101,20 +96,17 @@ class PhoneTest {
 
     @Test
     void keypadPhone_shouldThrow_whenBrandIsEmpty() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new KeypadPhone("", "3310", 999.0, 32, true));
+        assertThrows(IllegalArgumentException.class, () -> new KeypadPhone("", "3310", 999.0, 32, true));
     }
 
     @Test
     void satellitePhone_shouldThrow_whenNetworkIsNull() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new SatellitePhone("Iridium", "9575A", 55000.0, 16, null));
+        assertThrows(IllegalArgumentException.class, () -> new SatellitePhone("Iridium", "9575A", 55000.0, 16, null));
     }
 
     @Test
     void satellitePhone_shouldThrow_whenNetworkIsBlank() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new SatellitePhone("Iridium", "9575A", 55000.0, 16, "   "));
+        assertThrows(IllegalArgumentException.class, () -> new SatellitePhone("Iridium", "9575A", 55000.0, 16, "   "));
     }
 
     @Test
@@ -181,8 +173,7 @@ class PhoneTest {
 
     @Test
     void landlinePhone_shouldThrow_whenPriceIsNegative() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new LandlinePhone("Panasonic", "KX-TG", -100.0, 8, true));
+        assertThrows(IllegalArgumentException.class, () -> new LandlinePhone("Panasonic", "KX-TG", -100.0, 8, true));
     }
 
     @Test
@@ -224,7 +215,7 @@ class PhoneTest {
     void findByBrand_shouldSupportPartialMatch() {
         ArrayList<Phone> inventory = buildInventory();
         ArrayList<Phone> result = Main.findByBrand(inventory, "son");
-        assertEquals(0, result.size());
+        assertEquals(1, result.size());
 
         ArrayList<Phone> result2 = Main.findByBrand(inventory, "sung");
         assertEquals(1, result2.size());
