@@ -118,7 +118,7 @@ public class Main {
         System.out.println("1. Add device to store");
         System.out.println("2. List all devices");
         System.out.println("3. Search devices");
-        System.out.println("4. Вивести відсортовану інформацію про всі телефони");
+        System.out.println("4. Show sorted information about all phones");
         System.out.println("5. Exit");
         System.out.print("Your choice: ");
     }
@@ -225,7 +225,7 @@ public class Main {
 
     private static void printSearchResults(ArrayList<Phone> results) {
         if (results.isEmpty()) {
-            System.out.println("  Збігів не знайдено.");
+            System.out.println("  No matches found.");
             return;
         }
         System.out.println("\n--- Search Results (" + results.size() + " found) ---");
@@ -238,10 +238,10 @@ public class Main {
         boolean inSort = true;
         while (inSort) {
             System.out.println("\n--- SORT ---");
-            System.out.println("1. Сортувати за ціною (від дешевих до дорогих)");
-            System.out.println("2. Сортувати за обсягом пам'яті (від більшого до меншого)");
-            System.out.println("3. Сортувати за брендом та моделлю (алфавіт)");
-            System.out.println("0. Повернутися в головне меню");
+            System.out.println("1. Sort by price (cheapest first)");
+            System.out.println("2. Sort by storage (largest first)");
+            System.out.println("3. Sort by brand and model (alphabetical)");
+            System.out.println("0. Back to main menu");
             System.out.print("Your choice: ");
 
             int choice = -1;
