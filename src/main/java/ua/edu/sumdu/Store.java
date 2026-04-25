@@ -2,6 +2,7 @@ package ua.edu.sumdu;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 
 public class Store {
 
@@ -78,6 +79,15 @@ public class Store {
             sorted.add(items.get(i).getPhone());
         }
         Collections.sort(sorted);
+        return sorted;
+    }
+
+    public ArrayList<Phone> getSortedPhones(Comparator<Phone> comparator) {
+        ArrayList<Phone> sorted = new ArrayList<>();
+        for (int i = 0; i < items.size(); i++) {
+            sorted.add(items.get(i).getPhone());
+        }
+        sorted.sort(comparator);
         return sorted;
     }
 }

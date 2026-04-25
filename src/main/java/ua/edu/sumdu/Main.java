@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -45,7 +46,7 @@ public class Main {
                 case 1 -> handleCreateMenu(store, scanner);
                 case 2 -> store.printAll();
                 case 3 -> handleSearchMenu(store, scanner);
-                case 4 -> printSortedPhones(store);
+                case 4 -> handleSortMenu(store, scanner);
                 case 5 -> {
                     running = false;
                     saveToFile(store);
@@ -233,8 +234,64 @@ public class Main {
         }
     }
 
-    private static void printSortedPhones(Store store) {
-        ArrayList<Phone> sorted = store.getSortedPhones();
+    private static void handleSortMenu(Store store, Scanner scanner) {
+        boolean inSort = true;
+        while (inSort) {
+            System.out.println("\n--- SORT ---");
+            System.out.println("1. Сортувати за ціною (від дешевих до дорогих)");
+            System.out.println("2. Сортувати за обсягом пам'яті (від більшого до меншого)");
+            System.out.println("3. Сортувати за брендом та моделлю (алфавіт)");
+            System.out.println("0. Повернутися в головне меню");
+            System.out.print("Your choice: ");
+
+            int choice = -1;
+            try {
+                choice = scanner.nextInt();
+            } catch (InputMismatchException e) {
+                System.out.println("[Error] Please enter a number.");
+            } finally {
+                scanner.nextLine();
+            }
+
+            switch (choice) {
+                case 1 -> {
+                    Comparator<Phone> byPrice = new Comparator<Phone>() {
+                        @Override
+                        public int compare(Phone a, Phone b) {
+                            return Double.compare(a.getPrice(), b.getPrice());
+                        }
+                    };
+                    printSortedList(store.getSortedPhones(byPrice));
+                }
+                case 2 -> {
+                    Comparator<Phone> byStorageDesc = new Comparator<Phone>() {
+                        @Override
+                        public int compare(Phone a, Phone b) {
+                            return Integer.compare(b.getStorageCapacity(), a.getStorageCapacity());
+                        }
+                    };
+                    printSortedList(store.getSortedPhones(byStorageDesc));
+                }
+                case 3 -> {
+                    Comparator<Phone> byBrandModel = new Comparator<Phone>() {
+                        @Override
+                        public int compare(Phone a, Phone b) {
+                            int brandCmp = a.getBrand().compareToIgnoreCase(b.getBrand());
+                            if (brandCmp != 0) {
+                                return brandCmp;
+                            }
+                            return a.getModel().compareToIgnoreCase(b.getModel());
+                        }
+                    };
+                    printSortedList(store.getSortedPhones(byBrandModel));
+                }
+                case 0 -> inSort = false;
+                default -> System.out.println("[Error] Unknown option. Choose 0-3.");
+            }
+        }
+    }
+
+    private static void printSortedList(ArrayList<Phone> sorted) {
         if (sorted.isEmpty()) {
             System.out.println("  No devices in the store yet.");
             return;

@@ -423,4 +423,76 @@ class PhoneTest {
         assertEquals(0, apple.compareTo(new SmartPhone("apple", "iphone 15", 42999.0, 128, "iOS")));
         assertTrue(appleOther.compareTo(apple) < 0);
     }
+
+    @Test
+    void testSortByPrice_AnonymousClass() {
+        Store store = new Store();
+        store.addNewPhone(new SmartPhone("Samsung", "Galaxy S24", 36499.0, 256, "Android"), 1);
+        store.addNewPhone(new KeypadPhone("Nokia", "3310", 999.0, 32, true), 1);
+        store.addNewPhone(new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS"), 1);
+
+        java.util.Comparator<Phone> byPrice = new java.util.Comparator<Phone>() {
+            @Override
+            public int compare(Phone a, Phone b) {
+                return Double.compare(a.getPrice(), b.getPrice());
+            }
+        };
+
+        ArrayList<Phone> sorted = store.getSortedPhones(byPrice);
+
+        assertEquals(3, sorted.size());
+        assertEquals(999.0, sorted.get(0).getPrice());
+        assertEquals(36499.0, sorted.get(1).getPrice());
+        assertEquals(42999.0, sorted.get(2).getPrice());
+    }
+
+    @Test
+    void testSortByStorage_AnonymousClass() {
+        Store store = new Store();
+        store.addNewPhone(new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS"), 1);
+        store.addNewPhone(new SmartPhone("Samsung", "Galaxy S24", 36499.0, 256, "Android"), 1);
+        store.addNewPhone(new KeypadPhone("Nokia", "3310", 999.0, 32, true), 1);
+
+        java.util.Comparator<Phone> byStorageDesc = new java.util.Comparator<Phone>() {
+            @Override
+            public int compare(Phone a, Phone b) {
+                return Integer.compare(b.getStorageCapacity(), a.getStorageCapacity());
+            }
+        };
+
+        ArrayList<Phone> sorted = store.getSortedPhones(byStorageDesc);
+
+        assertEquals(3, sorted.size());
+        assertEquals(256, sorted.get(0).getStorageCapacity());
+        assertEquals(128, sorted.get(1).getStorageCapacity());
+        assertEquals(32, sorted.get(2).getStorageCapacity());
+    }
+
+    @Test
+    void testSortByBrandModel_AnonymousClass() {
+        Store store = new Store();
+        store.addNewPhone(new SmartPhone("Samsung", "Galaxy S24", 36499.0, 256, "Android"), 1);
+        store.addNewPhone(new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS"), 1);
+        store.addNewPhone(new SmartPhone("Apple", "iPhone 14", 35000.0, 128, "iOS"), 1);
+
+        java.util.Comparator<Phone> byBrandModel = new java.util.Comparator<Phone>() {
+            @Override
+            public int compare(Phone a, Phone b) {
+                int brandCmp = a.getBrand().compareToIgnoreCase(b.getBrand());
+                if (brandCmp != 0) {
+                    return brandCmp;
+                }
+                return a.getModel().compareToIgnoreCase(b.getModel());
+            }
+        };
+
+        ArrayList<Phone> sorted = store.getSortedPhones(byBrandModel);
+
+        assertEquals(3, sorted.size());
+        assertEquals("Apple", sorted.get(0).getBrand());
+        assertEquals("iPhone 14", sorted.get(0).getModel());
+        assertEquals("Apple", sorted.get(1).getBrand());
+        assertEquals("iPhone 15", sorted.get(1).getModel());
+        assertEquals("Samsung", sorted.get(2).getBrand());
+    }
 }
