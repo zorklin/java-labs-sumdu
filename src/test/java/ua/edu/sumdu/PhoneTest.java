@@ -1,6 +1,10 @@
 package ua.edu.sumdu;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.nio.file.Path;
+import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -8,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 class PhoneTest {
 
@@ -58,6 +63,12 @@ class PhoneTest {
         SmartPhone a = new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS");
         SmartPhone b = new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "Android");
         assertNotEquals(a, b);
+    }
+
+    @Test
+    void smartPhone_type_shouldBeSmartPhone() {
+        SmartPhone phone = new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS");
+        assertEquals("SmartPhone", phone.getType());
     }
 
     @Test
@@ -180,5 +191,99 @@ class PhoneTest {
     void polymorphism_toString_landlinePhone_shouldContainClassName() {
         Phone phone = new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, true);
         assertTrue(phone.toString().contains("LandlinePhone"));
+    }
+
+    @Test
+    void json_saveAndLoad_smartPhone_shouldPreserveAllFields(@TempDir Path tempDir) {
+        String filePath = tempDir.resolve("test.json").toString();
+
+        SmartPhone original = new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS");
+        ArrayList<Phone> toSave = new ArrayList<>();
+        toSave.add(original);
+
+        saveToFileWithPath(toSave, filePath);
+        ArrayList<Phone> loaded = loadFromFileWithPath(filePath);
+
+        assertEquals(1, loaded.size());
+        assertInstanceOf(SmartPhone.class, loaded.get(0));
+        SmartPhone restored = (SmartPhone) loaded.get(0);
+        assertEquals(original, restored);
+        assertEquals(original.getOperatingSystem(), restored.getOperatingSystem());
+    }
+
+    @Test
+    void json_saveAndLoad_keypadPhone_shouldPreserveFlashlight(@TempDir Path tempDir) {
+        String filePath = tempDir.resolve("test.json").toString();
+
+        KeypadPhone original = new KeypadPhone("Nokia", "3310", 999.0, 32, true);
+        ArrayList<Phone> toSave = new ArrayList<>();
+        toSave.add(original);
+
+        saveToFileWithPath(toSave, filePath);
+        ArrayList<Phone> loaded = loadFromFileWithPath(filePath);
+
+        assertEquals(1, loaded.size());
+        assertInstanceOf(KeypadPhone.class, loaded.get(0));
+        KeypadPhone restored = (KeypadPhone) loaded.get(0);
+        assertEquals(original.isHasFlashlight(), restored.isHasFlashlight());
+    }
+
+    @Test
+    void json_saveAndLoad_multipleTypes_shouldPreserveCount(@TempDir Path tempDir) {
+        String filePath = tempDir.resolve("test.json").toString();
+
+        ArrayList<Phone> toSave = new ArrayList<>();
+        toSave.add(new SmartPhone("Apple", "iPhone 15", 42999.0, 128, "iOS"));
+        toSave.add(new KeypadPhone("Nokia", "3310", 999.0, 32, true));
+        toSave.add(new SatellitePhone("Iridium", "9575A", 55000.0, 16, "Iridium"));
+        toSave.add(new LandlinePhone("Panasonic", "KX-TG", 2500.0, 8, false));
+
+        saveToFileWithPath(toSave, filePath);
+        ArrayList<Phone> loaded = loadFromFileWithPath(filePath);
+
+        assertEquals(4, loaded.size());
+        assertInstanceOf(SmartPhone.class, loaded.get(0));
+        assertInstanceOf(KeypadPhone.class, loaded.get(1));
+        assertInstanceOf(SatellitePhone.class, loaded.get(2));
+        assertInstanceOf(LandlinePhone.class, loaded.get(3));
+    }
+
+    private void saveToFileWithPath(ArrayList<Phone> inventory, String path) {
+        com.google.gson.Gson gson = new com.google.gson.GsonBuilder().setPrettyPrinting().create();
+        com.google.gson.JsonArray array = new com.google.gson.JsonArray();
+        for (int i = 0; i < inventory.size(); i++) {
+            array.add(gson.toJsonTree(inventory.get(i)));
+        }
+        try (java.io.FileWriter writer = new java.io.FileWriter(path)) {
+            gson.toJson(array, writer);
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private ArrayList<Phone> loadFromFileWithPath(String path) {
+        com.google.gson.Gson gson = new com.google.gson.GsonBuilder().setPrettyPrinting().create();
+        ArrayList<Phone> result = new ArrayList<>();
+        try (java.io.FileReader reader = new java.io.FileReader(path)) {
+            com.google.gson.JsonArray array = com.google.gson.JsonParser.parseReader(reader).getAsJsonArray();
+            for (int i = 0; i < array.size(); i++) {
+                com.google.gson.JsonObject obj = array.get(i).getAsJsonObject();
+                String type = obj.get("type").getAsString();
+                Phone phone = null;
+                switch (type) {
+                    case "SmartPhone" -> phone = gson.fromJson(obj, SmartPhone.class);
+                    case "KeypadPhone" -> phone = gson.fromJson(obj, KeypadPhone.class);
+                    case "SatellitePhone" -> phone = gson.fromJson(obj, SatellitePhone.class);
+                    case "LandlinePhone" -> phone = gson.fromJson(obj, LandlinePhone.class);
+                    default -> phone = gson.fromJson(obj, Phone.class);
+                }
+                if (phone != null) {
+                    result.add(phone);
+                }
+            }
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
+        return result;
     }
 }
